@@ -189,8 +189,8 @@
                     </button>
                 </div>
 
-                <!-- Photo Preview Box -->
-                <div class="relative rounded-xl overflow-hidden bg-slate-950 border border-slate-800 h-72 group flex items-center justify-center">
+                <!-- Photo Preview Box (Clickable to trigger AI file selection!) -->
+                <div onclick="document.getElementById('custom-photo-input').click()" class="relative rounded-xl overflow-hidden bg-slate-950 border border-slate-800 h-72 group flex items-center justify-center cursor-pointer hover:border-brand-500/50 transition">
                     <img id="note-preview-img" src="https://images.unsplash.com/photo-1532094349884-543bc11b234d?auto=format&fit=crop&w=800&q=80" alt="Study Notes Preview" class="w-full h-full object-cover opacity-90 transition-opacity">
                     
                     <div id="scan-laser" class="hidden absolute left-0 right-0 h-1 bg-gradient-to-r from-transparent via-brand-500 to-transparent shadow-[0_0_15px_#8b5cf6] animate-scan-line z-20"></div>
@@ -201,7 +201,7 @@
 
                     <div class="absolute bottom-2 left-2 right-2 p-2.5 rounded-lg glass-panel bg-slate-900/80 text-xs text-slate-300 flex justify-between items-center z-10">
                         <span id="note-title-display" class="font-semibold text-white truncate max-w-[200px]">Science - Mitochondria & Energy</span>
-                        <span class="text-[10px] bg-brand-500/20 text-brand-500 px-2 py-0.5 rounded border border-brand-500/30">OCR Active</span>
+                        <span class="text-[10px] bg-brand-500/20 text-brand-500 px-2 py-0.5 rounded border border-brand-500/30">Click to Change Photo</span>
                     </div>
                 </div>
 
@@ -224,8 +224,8 @@
                         </div>
                     </div>
 
-                    <button onclick="triggerAIScan()" id="scan-btn" class="w-full py-3.5 rounded-xl font-bold text-white gradient-bg hover:opacity-95 shadow-lg shadow-brand-500/20 transition flex items-center justify-center gap-2 text-sm">
-                        <i class="fa-solid fa-microchip"></i> Scan & Convert with AI
+                    <button onclick="document.getElementById('custom-photo-input').click()" id="scan-btn" class="w-full py-3.5 rounded-xl font-bold text-white gradient-bg hover:opacity-95 shadow-lg shadow-brand-500/20 transition flex items-center justify-center gap-2 text-sm">
+                        <i class="fa-solid fa-microchip"></i> Upload Note & Generate with AI
                     </button>
                 </div>
             </div>
@@ -601,7 +601,7 @@
             renderQuiz();
         });
 
-        // LIVE VERCEL BACKEND INTEGRATION
+        // LIVE VERCEL BACKEND INTEGRATION FOR CUSTOM PHOTO UPLOADS
         async function handleFileUpload(event) {
             const file = event.target.files[0];
             if (!file) return;
