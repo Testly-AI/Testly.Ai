@@ -1,0 +1,1008 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Testly - AI Notes to Quiz Generator</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f5f3ff',
+                            100: '#ede9fe',
+                            500: '#8b5cf6',
+                            600: '#7c3aed',
+                            700: '#6d28d9',
+                            900: '#4c1d95',
+                        },
+                        accent: {
+                            emerald: '#10b981',
+                            teal: '#14b8a6',
+                        }
+                    },
+                    animation: {
+                        'scan-line': 'scan 2.5s ease-in-out infinite',
+                        'pulse-glow': 'pulseGlow 2s infinite',
+                    },
+                    keyframes: {
+                        scan: {
+                            '0%, 100%': { top: '0%' },
+                            '50%': { top: '95%' },
+                        },
+                        pulseGlow: {
+                            '0%, 100%': { opacity: '0.4', transform: 'scale(1)' },
+                            '50%': { opacity: '0.8', transform: 'scale(1.05)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0b0f19;
+            color: #f3f4f6;
+            overflow-x: hidden;
+        }
+        .glass-panel {
+            background: rgba(17, 24, 39, 0.7);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .glass-card {
+            background: rgba(30, 41, 59, 0.5);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .glow-purple {
+            box-shadow: 0 0 35px -5px rgba(124, 58, 237, 0.3);
+        }
+        .glow-emerald {
+            box-shadow: 0 0 25px -5px rgba(16, 185, 129, 0.3);
+        }
+        .gradient-text {
+            background: linear-gradient(135deg, #c084fc 0%, #a855f7 50%, #34d399 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #7c3aed 0%, #4c1d95 100%);
+        }
+        /* Flashcard Flip */
+        .perspective-1000 {
+            perspective: 1000px;
+        }
+        .transform-style-3d {
+            transform-style: preserve-3d;
+        }
+        .backface-hidden {
+            backface-visibility: hidden;
+        }
+        .rotate-y-180 {
+            transform: rotateY(180deg);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between selection:bg-brand-500 selection:text-white">
+
+    <!-- Navigation Header -->
+    <header class="sticky top-0 z-50 glass-panel border-b border-slate-800/80 px-4 lg:px-8 py-3.5 transition-all">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <a href="#" class="flex items-center gap-3 group">
+                <div class="w-10 h-10 rounded-xl gradient-bg flex items-center justify-center text-white shadow-lg shadow-brand-500/20 group-hover:scale-105 transition-transform">
+                    <i class="fa-solid fa-wand-magic-sparkles text-lg"></i>
+                </div>
+                <div class="flex flex-col">
+                    <span class="text-2xl font-extrabold tracking-tight text-white flex items-center gap-1">
+                        Testly<span class="text-brand-500">.ai</span>
+                    </span>
+                    <span class="text-[10px] text-slate-400 font-medium tracking-wider uppercase -mt-1">Snap • Convert • Master</span>
+                </div>
+            </a>
+
+            <!-- Desktop Nav Links -->
+            <nav class="hidden md:flex items-center gap-8 text-sm font-medium text-slate-300">
+                <a href="#demo" class="hover:text-brand-500 transition-colors flex items-center gap-1.5"><i class="fa-solid fa-play text-xs text-brand-500"></i> Interactive Demo</a>
+                <a href="#how-it-works" class="hover:text-brand-500 transition-colors">How It Works</a>
+                <a href="#features" class="hover:text-brand-500 transition-colors">Features</a>
+                <a href="#pricing" class="hover:text-brand-500 transition-colors">Pricing</a>
+            </nav>
+
+            <div class="flex items-center gap-3">
+                <button onclick="scrollToDemo()" class="hidden sm:inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-slate-200 hover:text-white bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700 transition">
+                    <i class="fa-solid fa-bolt text-amber-400"></i> Try Free Demo
+                </button>
+                <a href="#demo" class="px-5 py-2.5 rounded-xl text-sm font-semibold text-white gradient-bg hover:opacity-90 shadow-lg shadow-brand-500/25 transition-all hover:scale-[1.02] active:scale-[0.98]">
+                    Get Started
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="relative pt-12 pb-20 px-4 overflow-hidden">
+        <!-- Ambient Glow Background Effects -->
+        <div class="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-brand-600/20 rounded-full blur-[120px] pointer-events-none"></div>
+        <div class="absolute top-1/3 right-10 w-[300px] h-[200px] bg-accent-emerald/10 rounded-full blur-[100px] pointer-events-none"></div>
+
+        <div class="max-w-5xl mx-auto text-center space-y-6 relative z-10">
+            <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full glass-card text-xs font-semibold text-brand-500 border border-brand-500/30 shadow-inner">
+                <span class="flex h-2 w-2 rounded-full bg-accent-emerald animate-ping"></span>
+                <span class="text-slate-200">New: Multi-Question AI Engine v2.0</span>
+            </div>
+
+            <h1 class="text-4xl sm:text-6xl font-extrabold tracking-tight text-white leading-tight">
+                Turn your handwritten notes into <br class="hidden sm:block"/>
+                <span class="gradient-text">interactive tests in seconds.</span>
+            </h1>
+
+            <p class="text-lg sm:text-xl text-slate-400 max-w-2xl mx-auto font-normal leading-relaxed">
+                Snap a photo of your homework, textbook pages, or lecture notes. Testly's AI extracts concepts and builds instant practice quizzes tailored to your exams.
+            </p>
+
+            <div class="flex flex-wrap items-center justify-center gap-4 pt-2">
+                <button onclick="scrollToDemo()" class="px-8 py-4 rounded-xl font-bold text-white gradient-bg hover:opacity-95 shadow-xl shadow-brand-600/30 flex items-center gap-3 group transition-all text-base">
+                    <span>Scan Notes Now</span>
+                    <i class="fa-solid fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
+                </button>
+                <a href="#how-it-works" class="px-7 py-4 rounded-xl font-semibold text-slate-300 hover:text-white glass-card hover:bg-slate-800/80 transition flex items-center gap-2 text-base border border-slate-700/60">
+                    <i class="fa-solid fa-circle-play text-brand-500"></i> See 30s Guide
+                </a>
+            </div>
+
+            <!-- Quick Trust Badges -->
+            <div class="pt-8 flex flex-wrap justify-center items-center gap-8 text-xs font-medium text-slate-400">
+                <span class="flex items-center gap-2"><i class="fa-solid fa-check text-accent-emerald"></i> 99.4% OCR Accuracy</span>
+                <span class="flex items-center gap-2"><i class="fa-solid fa-check text-accent-emerald"></i> Supports Math & Equations</span>
+                <span class="flex items-center gap-2"><i class="fa-solid fa-check text-accent-emerald"></i> Instant PDF & Anki Export</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Interactive Demo Section -->
+    <section id="demo" class="py-12 px-4 max-w-7xl mx-auto w-full relative z-20">
+        <div class="text-center mb-8">
+            <h2 class="text-2xl sm:text-3xl font-extrabold text-white">Experience Testly Live Generator</h2>
+            <p class="text-slate-400 text-sm mt-1">Select a sample note below or upload your own to test the AI converter in real-time.</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            
+            <!-- LEFT PANEL: Image Selection & Scanner View -->
+            <div class="lg:col-span-5 glass-panel rounded-2xl p-5 border border-slate-800 space-y-4">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-sm font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
+                        <i class="fa-solid fa-camera text-brand-500"></i> 1. Source Document
+                    </h3>
+                    <span id="scan-status" class="text-xs px-2.5 py-1 rounded-full bg-slate-800 text-slate-400 font-mono">Ready to scan</span>
+                </div>
+
+                <!-- Sample Document Selector Tabs -->
+                <div class="grid grid-cols-3 gap-2">
+                    <button onclick="selectSample('science')" id="tab-science" class="sample-tab px-3 py-2 rounded-lg text-xs font-medium bg-brand-600/30 border border-brand-500 text-white transition flex flex-col items-center gap-1">
+                        <i class="fa-solid fa-flask text-brand-500"></i>
+                        <span>Science</span>
+                    </button>
+                    <button onclick="selectSample('history')" id="tab-history" class="sample-tab px-3 py-2 rounded-lg text-xs font-medium bg-slate-800/80 border border-slate-700/60 text-slate-400 hover:text-white transition flex flex-col items-center gap-1">
+                        <i class="fa-solid fa-landmark text-amber-500"></i>
+                        <span>History</span>
+                    </button>
+                    <button onclick="selectSample('math')" id="tab-math" class="sample-tab px-3 py-2 rounded-lg text-xs font-medium bg-slate-800/80 border border-slate-700/60 text-slate-400 hover:text-white transition flex flex-col items-center gap-1">
+                        <i class="fa-solid fa-calculator text-emerald-500"></i>
+                        <span>Math</span>
+                    </button>
+                </div>
+
+                <!-- Photo Preview Box with Overlay Scanner Laser -->
+                <div class="relative rounded-xl overflow-hidden bg-slate-950 border border-slate-800 h-72 group flex items-center justify-center">
+                    <img id="note-preview-img" src="https://images.unsplash.com/photo-1532094349884-543bc11b234d?auto=format&fit=crop&w=800&q=80" alt="Study Notes Preview" class="w-full h-full object-cover opacity-90 transition-opacity">
+                    
+                    <!-- Laser Scan Line Effect -->
+                    <div id="scan-laser" class="hidden absolute left-0 right-0 h-1 bg-gradient-to-r from-transparent via-brand-500 to-transparent shadow-[0_0_15px_#8b5cf6] animate-scan-line z-20"></div>
+                    <div id="scan-overlay" class="hidden absolute inset-0 bg-brand-900/30 backdrop-blur-[2px] transition-all z-10 flex flex-col items-center justify-center">
+                        <i class="fa-solid fa-spinner animate-spin text-3xl text-brand-500 mb-2"></i>
+                        <span class="text-xs font-bold text-white tracking-wider uppercase">AI Extracting Concepts...</span>
+                    </div>
+
+                    <!-- Note Info Overlay -->
+                    <div class="absolute bottom-2 left-2 right-2 p-2.5 rounded-lg glass-panel bg-slate-900/80 text-xs text-slate-300 flex justify-between items-center z-10">
+                        <span id="note-title-display" class="font-semibold text-white truncate max-w-[200px]">Science - Mitochondria & Energy</span>
+                        <span class="text-[10px] bg-brand-500/20 text-brand-500 px-2 py-0.5 rounded border border-brand-500/30">OCR Active</span>
+                    </div>
+                </div>
+
+                <!-- Custom Photo Upload Drop Zone -->
+                <div class="relative">
+                    <input type="file" id="custom-photo-input" accept="image/*" class="hidden" onchange="handleFileUpload(event)">
+                    <button onclick="document.getElementById('custom-photo-input').click()" class="w-full py-2.5 rounded-xl border border-dashed border-slate-700 bg-slate-900/50 hover:bg-slate-800/60 text-xs font-semibold text-slate-400 hover:text-slate-200 transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-cloud-arrow-up text-brand-500"></i> Upload Custom Photo / Document
+                    </button>
+                </div>
+
+                <!-- Difficulty & Settings Bar -->
+                <div class="pt-2 border-t border-slate-800/80 space-y-3">
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="text-slate-400 font-medium">Difficulty Level:</span>
+                        <div class="flex bg-slate-900 p-1 rounded-lg border border-slate-800" id="difficulty-toggle">
+                            <button onclick="setDifficulty('Easy')" class="diff-btn px-2.5 py-1 rounded text-[11px] font-semibold text-slate-400 hover:text-white transition">Easy</button>
+                            <button onclick="setDifficulty('Moderate')" class="diff-btn px-2.5 py-1 rounded text-[11px] font-semibold bg-brand-600 text-white shadow transition">Moderate</button>
+                            <button onclick="setDifficulty('Exam')" class="diff-btn px-2.5 py-1 rounded text-[11px] font-semibold text-slate-400 hover:text-white transition">Exam Level</button>
+                        </div>
+                    </div>
+
+                    <button onclick="triggerAIScan()" id="scan-btn" class="w-full py-3.5 rounded-xl font-bold text-white gradient-bg hover:opacity-95 shadow-lg shadow-brand-500/20 transition flex items-center justify-center gap-2 text-sm">
+                        <i class="fa-solid fa-microchip"></i> Scan & Convert with AI
+                    </button>
+                </div>
+            </div>
+
+            <!-- RIGHT PANEL: Generated Quiz Canvas & Interactive Player -->
+            <div class="lg:col-span-7 glass-panel rounded-2xl p-5 border border-slate-800 min-h-[560px] flex flex-col justify-between relative">
+                
+                <!-- Quiz Header Bar -->
+                <div class="flex flex-wrap items-center justify-between pb-4 border-b border-slate-800 gap-2">
+                    <div class="flex items-center gap-3">
+                        <div class="w-3 h-3 rounded-full bg-accent-emerald animate-pulse"></div>
+                        <div>
+                            <h3 id="quiz-subject-title" class="text-base font-bold text-white">Generated Test: General Science</h3>
+                            <p class="text-xs text-slate-400" id="quiz-meta-info">3 Questions • Instant AI Grading</p>
+                        </div>
+                    </div>
+
+                    <!-- View Switcher Tabs (Multiple Choice, Flashcards, Fill Blank) -->
+                    <div class="flex bg-slate-900 p-1 rounded-xl border border-slate-800 text-xs">
+                        <button onclick="switchMode('mcq')" id="mode-mcq" class="mode-btn px-3 py-1.5 rounded-lg font-semibold bg-brand-600 text-white transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-list-check"></i> Quiz
+                        </button>
+                        <button onclick="switchMode('flashcards')" id="mode-flashcards" class="mode-btn px-3 py-1.5 rounded-lg font-semibold text-slate-400 hover:text-white transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-clone"></i> Flashcards
+                        </button>
+                    </div>
+                </div>
+
+                <!-- MAIN QUIZ DISPLAY CONTAINER -->
+                <div id="quiz-content-area" class="py-6 my-auto">
+                    <!-- Dynamic Questions injected here via JavaScript -->
+                </div>
+
+                <!-- Quiz Bottom Actions Bar -->
+                <div class="pt-4 border-t border-slate-800 flex flex-wrap items-center justify-between gap-3">
+                    <div class="flex items-center gap-2 text-xs text-slate-400">
+                        <span id="score-counter" class="font-bold text-slate-200">Score: 0/0</span>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <button onclick="resetQuiz()" class="px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 transition">
+                            <i class="fa-solid fa-rotate-left"></i> Reset
+                        </button>
+                        <button onclick="openExportModal()" class="px-4 py-2 rounded-xl text-xs font-semibold bg-brand-500/20 hover:bg-brand-500/30 text-brand-300 border border-brand-500/40 transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-file-export"></i> Export Test
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section id="how-it-works" class="py-24 px-4 max-w-7xl mx-auto w-full">
+        <div class="text-center max-w-2xl mx-auto mb-16">
+            <span class="text-xs font-bold uppercase tracking-widest text-brand-500">Simple 3-Step Process</span>
+            <h2 class="text-3xl font-extrabold text-white mt-2">How Testly transforms your notes into high grades</h2>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
+            <!-- Step 1 -->
+            <div class="glass-card rounded-2xl p-6 border border-slate-800 relative space-y-4 hover:border-brand-500/40 transition group">
+                <div class="w-12 h-12 rounded-xl bg-brand-600/20 text-brand-400 border border-brand-500/30 flex items-center justify-center text-xl font-bold group-hover:scale-110 transition-transform">
+                    01
+                </div>
+                <h3 class="text-lg font-bold text-white">Snap & Upload Notes</h3>
+                <p class="text-sm text-slate-400 leading-relaxed">
+                    Take a picture of your paper notes, textbook paragraphs, or digital PDFs directly using your phone or web browser.
+                </p>
+                <div class="text-xs text-brand-500 font-semibold flex items-center gap-1">
+                    <span>Supports handwriting & diagrams</span> <i class="fa-solid fa-check"></i>
+                </div>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="glass-card rounded-2xl p-6 border border-slate-800 relative space-y-4 hover:border-brand-500/40 transition group">
+                <div class="w-12 h-12 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center text-xl font-bold group-hover:scale-110 transition-transform">
+                    02
+                </div>
+                <h3 class="text-lg font-bold text-white">AI Extracts Concepts</h3>
+                <p class="text-sm text-slate-400 leading-relaxed">
+                    Testly's vision AI analyzes key terminology, equations, dates, and cause-effect relationships in seconds.
+                </p>
+                <div class="text-xs text-amber-400 font-semibold flex items-center gap-1">
+                    <span>Filters out fluff automatically</span> <i class="fa-solid fa-check"></i>
+                </div>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="glass-card rounded-2xl p-6 border border-slate-800 relative space-y-4 hover:border-brand-500/40 transition group">
+                <div class="w-12 h-12 rounded-xl bg-accent-emerald/20 text-accent-emerald border border-accent-emerald/30 flex items-center justify-center text-xl font-bold group-hover:scale-110 transition-transform">
+                    03
+                </div>
+                <h3 class="text-lg font-bold text-white">Practice & Active Recall</h3>
+                <p class="text-sm text-slate-400 leading-relaxed">
+                    Test yourself with interactive multiple-choice, fill-in-the-blank, and flashcards with instant AI grading & explanations.
+                </p>
+                <div class="text-xs text-accent-emerald font-semibold flex items-center gap-1">
+                    <span>Export to PDF or Anki</span> <i class="fa-solid fa-check"></i>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Full Feature Showcase Grid -->
+    <section id="features" class="py-24 px-4 bg-slate-950/60 border-y border-slate-800/80">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center max-w-2xl mx-auto mb-16">
+                <span class="text-xs font-bold uppercase tracking-widest text-accent-emerald">Engineered for Top Grades</span>
+                <h2 class="text-3xl font-extrabold text-white mt-2">Everything you need to ace your next exam</h2>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Feature 1 -->
+                <div class="glass-card rounded-2xl p-6 border border-slate-800 space-y-3 hover:bg-slate-900/80 transition">
+                    <div class="w-10 h-10 rounded-lg bg-brand-500/10 text-brand-400 flex items-center justify-center text-lg">
+                        <i class="fa-solid fa-eye"></i>
+                    </div>
+                    <h4 class="text-base font-bold text-white">OCR Vision Scanner</h4>
+                    <p class="text-xs text-slate-400 leading-relaxed">
+                        Reads cursive, math symbols, formulas, and messy handwriting accurately across various lighting conditions.
+                    </p>
+                </div>
+
+                <!-- Feature 2 -->
+                <div class="glass-card rounded-2xl p-6 border border-slate-800 space-y-3 hover:bg-slate-900/80 transition">
+                    <div class="w-10 h-10 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-lg">
+                        <i class="fa-solid fa-brain"></i>
+                    </div>
+                    <h4 class="text-base font-bold text-white">Active Recall & Spaced Repetition</h4>
+                    <p class="text-xs text-slate-400 leading-relaxed">
+                        Automatically converts key concepts into interactive digital flashcards with proven memory decay tracking.
+                    </p>
+                </div>
+
+                <!-- Feature 3 -->
+                <div class="glass-card rounded-2xl p-6 border border-slate-800 space-y-3 hover:bg-slate-900/80 transition">
+                    <div class="w-10 h-10 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center text-lg">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    </div>
+                    <h4 class="text-base font-bold text-white">Instant AI Explanations</h4>
+                    <p class="text-xs text-slate-400 leading-relaxed">
+                        Got a question wrong? Testly breaks down *why* the correct answer is right using plain, easy-to-understand explanations.
+                    </p>
+                </div>
+
+                <!-- Feature 4 -->
+                <div class="glass-card rounded-2xl p-6 border border-slate-800 space-y-3 hover:bg-slate-900/80 transition">
+                    <div class="w-10 h-10 rounded-lg bg-sky-500/10 text-sky-400 flex items-center justify-center text-lg">
+                        <i class="fa-solid fa-chart-line"></i>
+                    </div>
+                    <h4 class="text-base font-bold text-white">Weakness Analytics</h4>
+                    <p class="text-xs text-slate-400 leading-relaxed">
+                        Identify exactly which topics or chapters you are struggling with before exam day so you can review smarter.
+                    </p>
+                </div>
+
+                <!-- Feature 5 -->
+                <div class="glass-card rounded-2xl p-6 border border-slate-800 space-y-3 hover:bg-slate-900/80 transition">
+                    <div class="w-10 h-10 rounded-lg bg-purple-500/10 text-purple-400 flex items-center justify-center text-lg">
+                        <i class="fa-solid fa-file-pdf"></i>
+                    </div>
+                    <h4 class="text-base font-bold text-white">Printable PDF & Quiz Exports</h4>
+                    <p class="text-xs text-slate-400 leading-relaxed">
+                        Generate clean paper practice tests with separate answer keys for physical studying or classroom hand-outs.
+                    </p>
+                </div>
+
+                <!-- Feature 6 -->
+                <div class="glass-card rounded-2xl p-6 border border-slate-800 space-y-3 hover:bg-slate-900/80 transition">
+                    <div class="w-10 h-10 rounded-lg bg-rose-500/10 text-rose-400 flex items-center justify-center text-lg">
+                        <i class="fa-solid fa-users"></i>
+                    </div>
+                    <h4 class="text-base font-bold text-white">Study Group Sharing</h4>
+                    <p class="text-xs text-slate-400 leading-relaxed">
+                        Share generated quizzes with classmates via a single web link and challenge each other on study leaderboards.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section id="pricing" class="py-24 px-4 max-w-7xl mx-auto w-full">
+        <div class="text-center max-w-2xl mx-auto mb-16">
+            <span class="text-xs font-bold uppercase tracking-widest text-brand-500">Flexible Plans</span>
+            <h2 class="text-3xl font-extrabold text-white mt-2">Free for students. Upgrade as you grow.</h2>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+            <!-- Free Plan -->
+            <div class="glass-card rounded-2xl p-6 border border-slate-800 flex flex-col justify-between">
+                <div>
+                    <h3 class="text-lg font-bold text-white">Starter Free</h3>
+                    <p class="text-xs text-slate-400 mt-1">Perfect for casual weekly quiz prep.</p>
+                    <div class="my-6">
+                        <span class="text-4xl font-extrabold text-white">$0</span>
+                        <span class="text-slate-400 text-xs"> / forever</span>
+                    </div>
+                    <ul class="space-y-3 text-xs text-slate-300">
+                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-accent-emerald"></i> 15 Photo Scans per month</li>
+                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-accent-emerald"></i> Multiple Choice & Flashcards</li>
+                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-accent-emerald"></i> Basic AI Explanations</li>
+                    </ul>
+                </div>
+                <button onclick="scrollToDemo()" class="mt-8 w-full py-2.5 rounded-xl border border-slate-700 bg-slate-800/80 hover:bg-slate-700 text-xs font-bold text-slate-200 transition">
+                    Get Started Free
+                </button>
+            </div>
+
+            <!-- Pro Plan (Featured) -->
+            <div class="glass-card rounded-2xl p-6 border-2 border-brand-500 relative flex flex-col justify-between glow-purple bg-brand-950/20">
+                <div class="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-brand-600 text-white text-[10px] uppercase font-extrabold tracking-wider px-3 py-1 rounded-full shadow">
+                    Most Popular
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-white">Testly Pro</h3>
+                    <p class="text-xs text-brand-300 mt-1">Unlimited power for exam season.</p>
+                    <div class="my-6">
+                        <span class="text-4xl font-extrabold text-white">$6.99</span>
+                        <span class="text-slate-400 text-xs"> / month</span>
+                    </div>
+                    <ul class="space-y-3 text-xs text-slate-200">
+                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-accent-emerald"></i> Unlimited Photo & PDF Scans</li>
+                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-accent-emerald"></i> Complex Math & Diagram Recognition</li>
+                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-accent-emerald"></i> Export to PDF, Anki & Quizlet</li>
+                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-accent-emerald"></i> Unlimited Study Group Invites</li>
+                    </ul>
+                </div>
+                <button onclick="scrollToDemo()" class="mt-8 w-full py-3 rounded-xl gradient-bg hover:opacity-90 text-xs font-bold text-white shadow-lg transition">
+                    Start 7-Day Free Trial
+                </button>
+            </div>
+
+            <!-- Campus / Team Plan -->
+            <div class="glass-card rounded-2xl p-6 border border-slate-800 flex flex-col justify-between">
+                <div>
+                    <h3 class="text-lg font-bold text-white">Study Group</h3>
+                    <p class="text-xs text-slate-400 mt-1">Share among 5 friends or classmates.</p>
+                    <div class="my-6">
+                        <span class="text-4xl font-extrabold text-white">$14.99</span>
+                        <span class="text-slate-400 text-xs"> / month total</span>
+                    </div>
+                    <ul class="space-y-3 text-xs text-slate-300">
+                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-accent-emerald"></i> All Pro Features for 5 Users</li>
+                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-accent-emerald"></i> Shared Group Question Bank</li>
+                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-accent-emerald"></i> Group Competitive Leaderboards</li>
+                    </ul>
+                </div>
+                <button onclick="scrollToDemo()" class="mt-8 w-full py-2.5 rounded-xl border border-slate-700 bg-slate-800/80 hover:bg-slate-700 text-xs font-bold text-slate-200 transition">
+                    Form a Study Group
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Export Modal Backdrop -->
+    <div id="export-modal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="glass-panel w-full max-w-lg rounded-2xl p-6 border border-slate-700 space-y-5 shadow-2xl animate-in fade-in zoom-in duration-200">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+                <h3 class="text-base font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-file-export text-brand-500"></i> Export Practice Quiz
+                </h3>
+                <button onclick="closeExportModal()" class="text-slate-400 hover:text-white transition">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <div class="space-y-3">
+                <label class="block text-xs font-semibold text-slate-300">Choose Export Format:</label>
+                <div class="grid grid-cols-3 gap-3">
+                    <button onclick="selectExportType('pdf')" id="export-pdf" class="export-opt border border-brand-500 bg-brand-500/20 text-white p-3 rounded-xl text-center text-xs font-medium space-y-1">
+                        <i class="fa-solid fa-file-pdf text-xl text-rose-400 block"></i>
+                        <span>PDF Worksheet</span>
+                    </button>
+                    <button onclick="selectExportType('json')" id="export-json" class="export-opt border border-slate-800 bg-slate-900 text-slate-400 p-3 rounded-xl text-center text-xs font-medium space-y-1">
+                        <i class="fa-solid fa-code text-xl text-sky-400 block"></i>
+                        <span>JSON Format</span>
+                    </button>
+                    <button onclick="selectExportType('link')" id="export-link" class="export-opt border border-slate-800 bg-slate-900 text-slate-400 p-3 rounded-xl text-center text-xs font-medium space-y-1">
+                        <i class="fa-solid fa-link text-xl text-emerald-400 block"></i>
+                        <span>Shareable Link</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Preview Output Box -->
+            <div class="space-y-1">
+                <span class="text-[11px] font-semibold text-slate-400">Generated Output Preview:</span>
+                <textarea id="export-preview-text" readonly class="w-full h-32 rounded-xl bg-slate-950 border border-slate-800 p-3 text-xs font-mono text-slate-300 resize-none focus:outline-none"></textarea>
+            </div>
+
+            <div class="flex items-center gap-3 pt-2">
+                <button onclick="copyExportToClipboard()" class="flex-1 py-2.5 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-white transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-copy"></i> Copy Output
+                </button>
+                <button onclick="downloadExportAction()" class="flex-1 py-2.5 rounded-xl text-xs font-bold gradient-bg hover:opacity-90 text-white transition flex items-center justify-center gap-2 shadow">
+                    <i class="fa-solid fa-download"></i> Download File
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification Overlay -->
+    <div id="toast-msg" class="fixed bottom-6 right-6 z-50 hidden bg-slate-900 text-white border border-brand-500/50 px-4 py-3 rounded-xl shadow-2xl text-xs font-semibold flex items-center gap-3">
+        <i class="fa-solid fa-circle-check text-accent-emerald text-base"></i>
+        <span id="toast-text">Text copied to clipboard!</span>
+    </div>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-800/80 py-12 px-4 bg-slate-950/80 text-xs text-slate-500">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+            <div class="flex items-center gap-3">
+                <div class="w-7 h-7 rounded-lg gradient-bg flex items-center justify-center text-white text-xs">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                </div>
+                <span class="text-base font-bold text-white">Testly<span class="text-brand-500">.ai</span></span>
+                <span class="text-slate-600">|</span>
+                <span>© 2026 Testly Technologies Inc. All rights reserved.</span>
+            </div>
+
+            <div class="flex gap-6 font-medium">
+                <a href="#" class="hover:text-slate-300 transition">Privacy Policy</a>
+                <a href="#" class="hover:text-slate-300 transition">Terms of Service</a>
+                <a href="#" class="hover:text-slate-300 transition">Contact Support</a>
+                <a href="https://github.com" target="_blank" class="hover:text-slate-300 transition flex items-center gap-1"><i class="fa-brands fa-github"></i> GitHub</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Sample Notes Dataset with Questions across multiple categories & types
+        const SAMPLE_DATA = {
+            science: {
+                title: "General Science - Mitochondria & Energy",
+                img: "https://images.unsplash.com/photo-1532094349884-543bc11b234d?auto=format&fit=crop&w=800&q=80",
+                mcq: [
+                    {
+                        question: "What primary organic molecule is produced by Mitochondria to power cellular functions?",
+                        options: ["Adenosine Triphosphate (ATP)", "Deoxyribonucleic Acid (DNA)", "Glucose Monomer", "Lactic Acid"],
+                        correct: 0,
+                        explanation: "Mitochondria produce ATP through cellular respiration, acting as the primary energy currency for cell activity."
+                    },
+                    {
+                        question: "Which membrane layer of the mitochondrion contains the electron transport chain foldings (cristae)?",
+                        options: ["Outer Membrane", "Inner Membrane", "Matrix Fluid", "Nuclear Envelope"],
+                        correct: 1,
+                        explanation: "The inner membrane is folded into cristae to maximize the surface area available for chemical reactions."
+                    },
+                    {
+                        question: "During cellular respiration, where does Glycolysis occur before pyruvate enters the matrix?",
+                        options: ["Lysosome", "Ribosome", "Cytoplasm (Cytosol)", "Golgi Body"],
+                        correct: 2,
+                        explanation: "Glycolysis happens in the cytosol and breaks down glucose prior to entering the mitochondria."
+                    }
+                ],
+                flashcards: [
+                    { q: "What is the main function of mitochondria?", a: "To generate chemical energy in the form of ATP for cellular tasks." },
+                    { q: "What does ATP stand for?", a: "Adenosine Triphosphate." },
+                    { q: "What is the inner membrane folding of mitochondria called?", a: "Cristae." }
+                ]
+            },
+            history: {
+                title: "World War II - Allied Powers Strategy (1942-1945)",
+                img: "https://images.unsplash.com/photo-1461360370896-922624d12aa1?auto=format&fit=crop&w=800&q=80",
+                mcq: [
+                    {
+                        question: "What key Allied amphibious landing in Normandy on June 6, 1944 opened the Western Front in Europe?",
+                        options: ["Operation Barbarossa", "Operation Overlord (D-Day)", "Battle of Midway", "Yalta Conference"],
+                        correct: 1,
+                        explanation: "Operation Overlord landed over 150,000 Allied troops on Normandy beaches, establishing a western foothold against Axis forces."
+                    },
+                    {
+                        question: "Which conference in 1945 featured Churchill, Roosevelt, and Stalin reorganizing post-war Europe?",
+                        options: ["Treaty of Versailles", "Yalta Conference", "Geneva Convention", "Potsdam Agreement"],
+                        correct: 1,
+                        explanation: "The Yalta Conference brought the 'Big Three' leaders together to plan WWII's final defeat and post-war occupation zones."
+                    }
+                ],
+                flashcards: [
+                    { q: "When was D-Day carried out?", a: "June 6, 1944." },
+                    { q: "Which 3 major Allied leaders met at the Yalta Conference?", a: "Winston Churchill, Franklin D. Roosevelt, and Joseph Stalin." }
+                ]
+            },
+            math: {
+                title: "Algebra & Math - Equations & Derivatives",
+                img: "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?auto=format&fit=crop&w=800&q=80",
+                mcq: [
+                    {
+                        question: "Using the Power Rule d/dx [x^n] = n*x^(n-1), what is the derivative of f(x) = 4x^3?",
+                        options: ["12x^2", "4x^2", "12x^3", "7x^2"],
+                        correct: 0,
+                        explanation: "Multiply coefficient 4 by power 3 (4*3 = 12), then subtract 1 from exponent (3-1 = 2) yielding 12x^2."
+                    },
+                    {
+                        question: "What is the derivative of any constant value c (e.g., d/dx [7])?",
+                        options: ["1", "0", "c", "x"],
+                        correct: 1,
+                        explanation: "The slope of a constant horizontal line is 0, so its derivative is always zero."
+                    }
+                ],
+                flashcards: [
+                    { q: "State the Power Rule for derivatives.", a: "d/dx [x^n] = n * x^(n-1)" },
+                    { q: "What is the slope of a flat line y = 5?", a: "0 (Zero slope)" }
+                ]
+            }
+        };
+
+        // Application State
+        let currentSubjectKey = 'science';
+        let currentMode = 'mcq'; // 'mcq' or 'flashcards'
+        let currentDifficulty = 'Moderate';
+        let userAnswers = {};
+        let score = 0;
+        let currentFlashcardIndex = 0;
+        let currentExportType = 'pdf';
+
+        // Initialize Page
+        window.addEventListener('DOMContentLoaded', () => {
+            renderQuiz();
+        });
+
+        // Switch Sample Notes
+        function selectSample(key) {
+            currentSubjectKey = key;
+            
+            // Update tabs UI
+            document.querySelectorAll('.sample-tab').forEach(tab => {
+                tab.classList.remove('bg-brand-600/30', 'border-brand-500', 'text-white');
+                tab.classList.add('bg-slate-800/80', 'border-slate-700/60', 'text-slate-400');
+            });
+
+            const selectedTab = document.getElementById(`tab-${key}`);
+            if (selectedTab) {
+                selectedTab.classList.remove('bg-slate-800/80', 'border-slate-700/60', 'text-slate-400');
+                selectedTab.classList.add('bg-brand-600/30', 'border-brand-500', 'text-white');
+            }
+
+            // Update Image Preview & Title
+            const data = SAMPLE_DATA[key];
+            document.getElementById('note-preview-img').src = data.img;
+            document.getElementById('note-title-display').innerText = data.title;
+            
+            // Re-render Quiz with subtle animation
+            triggerAIScan();
+        }
+
+        // Difficulty Selection
+        function setDifficulty(level) {
+            currentDifficulty = level;
+            const buttons = document.querySelectorAll('#difficulty-toggle button');
+            buttons.forEach(btn => {
+                if (btn.innerText === level) {
+                    btn.className = 'diff-btn px-2.5 py-1 rounded text-[11px] font-semibold bg-brand-600 text-white shadow transition';
+                } else {
+                    btn.className = 'diff-btn px-2.5 py-1 rounded text-[11px] font-semibold text-slate-400 hover:text-white transition';
+                }
+            });
+            showToast(`Difficulty set to ${level}`);
+        }
+
+        // Trigger AI Laser Scan Animation
+        function triggerAIScan() {
+            const laser = document.getElementById('scan-laser');
+            const overlay = document.getElementById('scan-overlay');
+            const status = document.getElementById('scan-status');
+
+            laser.classList.remove('hidden');
+            overlay.classList.remove('hidden');
+            status.innerText = 'Analyzing Image...';
+            status.className = 'text-xs px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 font-mono animate-pulse';
+
+            setTimeout(() => {
+                laser.classList.add('hidden');
+                overlay.classList.add('hidden');
+                status.innerText = 'AI Scan Complete';
+                status.className = 'text-xs px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-mono';
+                
+                resetQuiz();
+            }, 1200);
+        }
+
+        // Switch between Quiz Mode and Flashcards Mode
+        function switchMode(mode) {
+            currentMode = mode;
+            document.getElementById('mode-mcq').className = mode === 'mcq' 
+                ? 'mode-btn px-3 py-1.5 rounded-lg font-semibold bg-brand-600 text-white transition flex items-center gap-1.5'
+                : 'mode-btn px-3 py-1.5 rounded-lg font-semibold text-slate-400 hover:text-white transition flex items-center gap-1.5';
+
+            document.getElementById('mode-flashcards').className = mode === 'flashcards' 
+                ? 'mode-btn px-3 py-1.5 rounded-lg font-semibold bg-brand-600 text-white transition flex items-center gap-1.5'
+                : 'mode-btn px-3 py-1.5 rounded-lg font-semibold text-slate-400 hover:text-white transition flex items-center gap-1.5';
+
+            renderQuiz();
+        }
+
+        // Main Render Function
+        function renderQuiz() {
+            const data = SAMPLE_DATA[currentSubjectKey];
+            const container = document.getElementById('quiz-content-area');
+            document.getElementById('quiz-subject-title').innerText = `Generated Test: ${data.title}`;
+            
+            if (currentMode === 'mcq') {
+                renderMCQ(data.mcq, container);
+            } else {
+                renderFlashcards(data.flashcards, container);
+            }
+        }
+
+        // Render MCQ Questions
+        function renderMCQ(questions, container) {
+            document.getElementById('quiz-meta-info').innerText = `${questions.length} Multiple Choice Questions • ${currentDifficulty} Level`;
+            
+            let html = `<div class="space-y-6 max-h-[380px] overflow-y-auto pr-2 custom-scrollbar">`;
+
+            questions.forEach((q, qIndex) => {
+                const userSelected = userAnswers[qIndex];
+                
+                html += `
+                    <div class="glass-card rounded-xl p-4 border border-slate-800/80 space-y-3">
+                        <div class="flex items-start gap-2.5">
+                            <span class="w-6 h-6 rounded-full bg-brand-500/20 text-brand-400 text-xs font-bold flex items-center justify-center shrink-0 border border-brand-500/30">
+                                ${qIndex + 1}
+                            </span>
+                            <p class="text-xs sm:text-sm font-semibold text-slate-100 leading-snug">${q.question}</p>
+                        </div>
+
+                        <div class="grid grid-cols-1 gap-2 pl-8">
+                `;
+
+                q.options.forEach((opt, optIndex) => {
+                    let optionStyle = 'border-slate-800 bg-slate-900/60 hover:bg-slate-800 text-slate-300';
+                    let iconHtml = `<span class="w-4 h-4 rounded-full border border-slate-700 flex items-center justify-center text-[10px] text-slate-500">${String.fromCharCode(65 + optIndex)}</span>`;
+
+                    if (userSelected !== undefined) {
+                        if (optIndex === q.correct) {
+                            optionStyle = 'border-emerald-500/80 bg-emerald-950/30 text-emerald-300 font-medium';
+                            iconHtml = `<i class="fa-solid fa-circle-check text-emerald-400 text-xs"></i>`;
+                        } else if (userSelected === optIndex) {
+                            optionStyle = 'border-rose-500/80 bg-rose-950/30 text-rose-300 font-medium';
+                            iconHtml = `<i class="fa-solid fa-circle-xmark text-rose-400 text-xs"></i>`;
+                        }
+                    }
+
+                    html += `
+                        <button onclick="handleAnswer(${qIndex}, ${optIndex})" 
+                                ${userSelected !== undefined ? 'disabled' : ''} 
+                                class="w-full text-left p-2.5 rounded-lg border text-xs flex items-center justify-between transition-all ${optionStyle}">
+                            <span>${opt}</span>
+                            ${iconHtml}
+                        </button>
+                    `;
+                });
+
+                // Show Explanation if Answered
+                if (userSelected !== undefined) {
+                    html += `
+                        <div class="mt-2 p-2.5 rounded-lg bg-slate-900/90 border border-brand-500/30 text-[11px] text-slate-300 flex items-start gap-2">
+                            <i class="fa-solid fa-lightbulb text-amber-400 mt-0.5"></i>
+                            <div>
+                                <span class="font-bold text-white">AI Explanation:</span> ${q.explanation}
+                            </div>
+                        </div>
+                    `;
+                }
+
+                html += `</div></div>`;
+            });
+
+            html += `</div>`;
+            container.innerHTML = html;
+            updateScoreDisplay(questions.length);
+        }
+
+        // Render Flashcard Stack
+        function renderFlashcards(cards, container) {
+            document.getElementById('quiz-meta-info').innerText = `Card ${currentFlashcardIndex + 1} of ${cards.length} • Active Recall Mode`;
+            const card = cards[currentFlashcardIndex];
+
+            container.innerHTML = `
+                <div class="flex flex-col items-center justify-center space-y-4 py-4">
+                    <div id="flashcard" onclick="flipCard()" class="w-full max-w-md h-56 glass-card rounded-2xl border border-brand-500/30 p-6 flex flex-col justify-between items-center text-center cursor-pointer hover:border-brand-500/60 transition shadow-xl relative group">
+                        <span class="text-[10px] font-mono text-brand-400 uppercase tracking-widest flex items-center gap-1">
+                            <i class="fa-solid fa-arrows-rotate"></i> Click Card to Flip Answer
+                        </span>
+
+                        <div id="card-content-front" class="my-auto space-y-2">
+                            <span class="text-xs font-bold text-slate-400 uppercase">Question</span>
+                            <p class="text-base font-bold text-white leading-relaxed">${card.q}</p>
+                        </div>
+
+                        <div id="card-content-back" class="hidden my-auto space-y-2">
+                            <span class="text-xs font-bold text-emerald-400 uppercase">Answer</span>
+                            <p class="text-base font-semibold text-emerald-200 leading-relaxed">${card.a}</p>
+                        </div>
+
+                        <span class="text-[10px] text-slate-500">Card ${currentFlashcardIndex + 1} / ${cards.length}</span>
+                    </div>
+
+                    <div class="flex items-center gap-4">
+                        <button onclick="prevFlashcard()" class="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white transition text-xs font-bold flex items-center gap-1">
+                            <i class="fa-solid fa-chevron-left"></i> Prev
+                        </button>
+                        <button onclick="flipCard()" class="px-4 py-2 rounded-xl gradient-bg text-white transition text-xs font-bold shadow">
+                            Flip Card
+                        </button>
+                        <button onclick="nextFlashcard(${cards.length})" class="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white transition text-xs font-bold flex items-center gap-1">
+                            Next <i class="fa-solid fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+            updateScoreDisplay(cards.length, true);
+        }
+
+        // Handle MCQ Option Click
+        function handleAnswer(qIndex, optIndex) {
+            userAnswers[qIndex] = optIndex;
+            const data = SAMPLE_DATA[currentSubjectKey].mcq;
+            if (optIndex === data[qIndex].correct) {
+                score++;
+            }
+            renderQuiz();
+        }
+
+        // Flashcard Navigation
+        function flipCard() {
+            const front = document.getElementById('card-content-front');
+            const back = document.getElementById('card-content-back');
+            const card = document.getElementById('flashcard');
+
+            if (front.classList.contains('hidden')) {
+                front.classList.remove('hidden');
+                back.classList.add('hidden');
+                card.classList.remove('border-emerald-500/50');
+                card.classList.add('border-brand-500/30');
+            } else {
+                front.classList.add('hidden');
+                back.classList.remove('hidden');
+                card.classList.add('border-emerald-500/50');
+                card.classList.remove('border-brand-500/30');
+            }
+        }
+
+        function nextFlashcard(total) {
+            currentFlashcardIndex = (currentFlashcardIndex + 1) % total;
+            renderQuiz();
+        }
+
+        function prevFlashcard() {
+            const total = SAMPLE_DATA[currentSubjectKey].flashcards.length;
+            currentFlashcardIndex = (currentFlashcardIndex - 1 + total) % total;
+            renderQuiz();
+        }
+
+        // Reset Quiz Progress
+        function resetQuiz() {
+            userAnswers = {};
+            score = 0;
+            currentFlashcardIndex = 0;
+            renderQuiz();
+            showToast("Test reset successfully!");
+        }
+
+        // Score display update
+        function updateScoreDisplay(total, isCards = false) {
+            const counter = document.getElementById('score-counter');
+            if (isCards) {
+                counter.innerText = `Flashcards Completed: ${currentFlashcardIndex + 1}/${total}`;
+            } else {
+                const answered = Object.keys(userAnswers).length;
+                counter.innerText = `Score: ${score}/${answered} (Total ${total})`;
+            }
+        }
+
+        // Custom File Upload Handler
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('note-preview-img').src = e.target.result;
+                    document.getElementById('note-title-display').innerText = file.name;
+                    triggerAIScan();
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Export Modal & Formatting Logic
+        function openExportModal() {
+            document.getElementById('export-modal').classList.remove('hidden');
+            selectExportType('pdf');
+        }
+
+        function closeExportModal() {
+            document.getElementById('export-modal').classList.add('hidden');
+        }
+
+        function selectExportType(type) {
+            currentExportType = type;
+            const data = SAMPLE_DATA[currentSubjectKey];
+            const textContainer = document.getElementById('export-preview-text');
+
+            document.querySelectorAll('.export-opt').forEach(btn => {
+                btn.className = 'export-opt border border-slate-800 bg-slate-900 text-slate-400 p-3 rounded-xl text-center text-xs font-medium space-y-1';
+            });
+
+            document.getElementById(`export-${type}`).className = 'export-opt border border-brand-500 bg-brand-500/20 text-white p-3 rounded-xl text-center text-xs font-medium space-y-1';
+
+            if (type === 'pdf') {
+                let pdfTxt = `TESTLY PRACTICE WORKSHEET\nSubject: ${data.title}\nDifficulty: ${currentDifficulty}\n-------------------------------------\n\n`;
+                data.mcq.forEach((q, i) => {
+                    pdfTxt += `Q${i+1}: ${q.question}\n`;
+                    q.options.forEach((opt, oi) => pdfTxt += `  [ ] ${String.fromCharCode(65+oi)}. ${opt}\n`);
+                    pdfTxt += `\n`;
+                });
+                textContainer.value = pdfTxt;
+            } else if (type === 'json') {
+                textContainer.value = JSON.stringify(data.mcq, null, 2);
+            } else if (type === 'link') {
+                textContainer.value = `https://testly.ai/quiz/share?id=test_${Math.floor(Math.random()*899999 + 100000)}`;
+            }
+        }
+
+        function copyExportToClipboard() {
+            const txt = document.getElementById('export-preview-text').value;
+            navigator.clipboard.writeText(txt).then(() => {
+                showToast("Copied output to clipboard!");
+            }).catch(() => {
+                showToast("Copied to clipboard!");
+            });
+        }
+
+        function downloadExportAction() {
+            showToast("Preparing document download...");
+            setTimeout(() => {
+                showToast("Download started!");
+                closeExportModal();
+            }, 800);
+        }
+
+        // Utility: Scroll Smoothly to Demo
+        function scrollToDemo() {
+            document.getElementById('demo').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Utility: Toast Messenger
+        function showToast(msg) {
+            const toast = document.getElementById('toast-msg');
+            document.getElementById('toast-text').innerText = msg;
+            toast.classList.remove('hidden');
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 2500);
+        }
+    </script>
+</body>
+</html>
